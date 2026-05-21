@@ -29,10 +29,13 @@ function Run-Cycle {
     Set-Content -Path $tmpFile -Value $prompt -Encoding UTF8
 
     Write-Log "Cycle start"
-    $output = Get-Content $tmpFile | claude --print --dangerously-skip-permissions 2>&1
+    $logPath = $LOG_FILE
+    Get-Content $tmpFile | claude --print --dangerously-skip-permissions 2>&1 | ForEach-Object {
+        $line = "[$((Get-ET).ToString('HH:mm:ss'))]   $_"
+        Write-Host $line
+        Add-Content -Path $logPath -Value $line -Encoding UTF8
+    }
     Remove-Item $tmpFile -ErrorAction SilentlyContinue
-
-    $output | ForEach-Object { Write-Log "  $_" }
     Write-Log "Cycle end"
 }
 
