@@ -64,7 +64,10 @@ while ($true) {
     }
 
     # Active window: 10:00-15:00 ET
+    $cycleStart = Get-Date
     Run-Cycle
-    Write-Log "Sleeping $CYCLE_SECS seconds..."
-    Start-Sleep -Seconds $CYCLE_SECS
+    $elapsed   = [int]((Get-Date) - $cycleStart).TotalSeconds
+    $remaining = [Math]::Max(0, $CYCLE_SECS - $elapsed)
+    Write-Log "Cycle took ${elapsed}s. Sleeping ${remaining}s to next slot..."
+    if ($remaining -gt 0) { Start-Sleep -Seconds $remaining }
 }
