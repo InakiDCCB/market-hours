@@ -190,30 +190,6 @@ function DollarPnL({ trades }: { trades: Trade[] }) {
   )
 }
 
-function PositionsCard({ account, loading }: { account: AlpacaAccount | null; loading: boolean }) {
-  const count   = account?.positions_count ?? 0
-  const longVal = account ? parseFloat(account.long_market_value) : null
-
-  return (
-    <div className="bg-gray-900/50 border border-gray-800/60 rounded-xl p-4">
-      <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1.5">Positions</p>
-      {loading ? (
-        <div className="h-7 w-16 bg-gray-800 rounded animate-pulse" />
-      ) : (
-        <p className="text-xl font-mono font-semibold text-white">{count}</p>
-      )}
-      <p className="text-[11px] text-gray-600 mt-0.5">
-        {count > 0
-          ? `${count} posición${count !== 1 ? 'es' : ''} abierta${count !== 1 ? 's' : ''}`
-          : 'sin posiciones abiertas'}
-      </p>
-      {longVal != null && longVal > 0 && (
-        <p className="text-[11px] font-mono text-emerald-500 mt-1">{fmtUSD(longVal)} expuesto</p>
-      )}
-    </div>
-  )
-}
-
 function LivePositions({ alpacaState }: { alpacaState: AlpacaState | null }) {
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
@@ -344,10 +320,9 @@ export default function AccountSummary({ trades, alpacaState }: { trades: Trade[
         <div className="sm:w-48 sm:flex-shrink-0">
           <PortfolioCard account={account} loading={loading} />
         </div>
-        <div className="flex-1 grid grid-cols-2 gap-3">
+        <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-3">
           <HitRatioGauge trades={trades} />
           <DollarPnL trades={trades} />
-          <PositionsCard account={account} loading={loading} />
           <StatCard
             label="P&L Promedio"
             value={closedTrades.length > 0 ? `${avgPnL >= 0 ? '+' : ''}${fmtUSD(avgPnL)}` : '—'}
