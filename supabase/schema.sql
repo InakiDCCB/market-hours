@@ -35,22 +35,6 @@ create table if not exists agent_status (
   metadata    jsonb
 );
 
--- MARKET_SNAPSHOTS
--- Periodic OHLCV captures for each watched asset
-create table if not exists market_snapshots (
-  id            uuid primary key default gen_random_uuid(),
-  captured_at   timestamptz not null default now(),
-  asset         text not null,
-  timeframe     text not null,              -- '1m','5m','1h','1d'
-  open          numeric,
-  high          numeric,
-  low           numeric,
-  close         numeric not null,
-  volume        numeric,
-  vwap          numeric,
-  notes         text
-);
-
 -- ANALYSIS_LOG
 -- Dated observations, signals, and indicator readings
 create table if not exists analysis_log (
@@ -77,7 +61,6 @@ create table if not exists champion_strategy (
 -- Indexes for common query patterns
 create index if not exists trades_asset_idx       on trades (asset);
 create index if not exists trades_created_idx     on trades (created_at desc);
-create index if not exists snapshots_asset_idx    on market_snapshots (asset, captured_at desc);
 create index if not exists analysis_asset_idx     on analysis_log (asset, created_at desc);
 
 -- SESSION_MEMORY
@@ -101,7 +84,6 @@ create index if not exists session_memory_date_idx on session_memory (session_da
 -- Data API grants (required from October 30, 2026)
 -- PostgREST / supabase-js will require explicit grants on all public tables.
 grant select on public.trades to anon;
-grant select on public.market_snapshots to anon;
 grant select on public.analysis_log to anon;
 grant select, update on public.agent_status to anon;
 grant select on public.champion_strategy to anon;
