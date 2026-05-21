@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { checkSecret } from '../../alpaca/_shared'
+import { checkSecret } from '../../../../lib/auth'
 import { syncAlpacaState } from '../../../../lib/alpaca-sync'
 
 export const revalidate = 0

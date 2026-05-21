@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabase } from '../../../../lib/supabase'
-import { checkSecret } from '../../alpaca/_shared'
+import { checkSecret } from '../../../../lib/auth'
 
 export const revalidate = 0
 
