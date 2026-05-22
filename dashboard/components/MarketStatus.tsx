@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from 'react'
 
+function getET(): Date {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }))
+}
+
 function isMarketOpen(): boolean {
-  const et = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }))
+  const et = getET()
   const day = et.getDay()
   if (day === 0 || day === 6) return false
   const mins = et.getHours() * 60 + et.getMinutes()
@@ -18,6 +22,39 @@ function etClock(): string {
     minute: '2-digit',
     second: '2-digit',
   })
+}
+
+function formatCountdown(totalMins: number): string {
+  const h = Math.floor(totalMins / 60)
+  const m = totalMins % 60
+  if (h > 0 && m > 0) return `${h}h ${m}m`
+  if (h > 0) return `${h}h`
+  return `${m}m`
+}
+
+function timeToNext(open: boolean): string {
+  const et = getET()
+  const day = et.getDay()
+  const mins = et.getHours() * 60 + et.getMinutes()
+
+  if (open) {
+    // Time until 16:00 close
+    return `closes in ${formatCountdown(960 - mins)}`
+  }
+
+  // Closed — find next weekday 9:30
+  let minsToOpen: number
+  if (day === 0) {          // Sunday → Monday
+    minsToOpen = (24 * 60 - mins) + 570
+  } else if (day === 6) {   // Saturday → Monday
+    minsToOpen = (24 * 60 - mins) + 24 * 60 + 570
+  } else if (mins < 570) {  // Weekday pre-market
+    minsToOpen = 570 - mins
+  } else {                  // Weekday after close → next weekday
+    const daysToAdd = day === 5 ? 3 : 1  // Friday → Monday
+    minsToOpen = (24 * 60 - mins) + (daysToAdd - 1) * 24 * 60 + 570
+  }
+  return `opens in ${formatCountdown(minsToOpen)}`
 }
 
 export default function MarketStatus() {
@@ -61,8 +98,16 @@ export default function MarketStatus() {
       </div>
 
       {time && (
-        <span className="text-xs text-gray-500 font-mono">
-          {open ? 'Open' : 'Close'} {time}
+        <span className="text-xs text-gray-500 font-mono">{time} ET</span>
+      )}
+
+      {time && (
+        <span className={`text-xs font-mono px-2 py-0.5 rounded border ${
+          open
+            ? 'bg-gray-900 text-gray-400 border-gray-700/40'
+            : 'bg-gray-900 text-gray-500 border-gray-700/40'
+        }`}>
+          {timeToNext(open)}
         </span>
       )}
 

@@ -153,6 +153,7 @@ function DollarPnL({ trades }: { trades: Trade[] }) {
   const net       = winsTotal - lossTotal
   const ratio     = lossTotal > 0 ? (winsTotal / lossTotal).toFixed(2) : winsTotal > 0 ? '∞' : '—'
   const maxBar    = Math.max(winsTotal, lossTotal, 1)
+  const avg       = closed.length > 0 ? net / closed.length : null
 
   return (
     <div className="bg-gray-900/50 border border-gray-800/60 rounded-xl p-4">
@@ -186,6 +187,14 @@ function DollarPnL({ trades }: { trades: Trade[] }) {
           Net {net >= 0 ? '+' : ''}{fmtUSD(net)}
         </span>
       </div>
+
+      {avg !== null && (
+        <div className="mt-1.5 text-[10px] text-right text-gray-600">
+          Avg/trade: <span className={`font-mono ${avg >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {avg >= 0 ? '+' : ''}{fmtUSD(avg)}
+          </span>
+        </div>
+      )}
     </div>
   )
 }
@@ -307,11 +316,7 @@ export default function AccountSummary({ trades, alpacaState }: { trades: Trade[
       .catch(() => setLoading(false))
   }, [])
 
-  const filled       = trades.filter(t => t.status === 'filled')
-  const closedTrades = filled.filter(t => t.pnl != null)
-  const avgPnL       = closedTrades.length > 0
-    ? closedTrades.reduce((s, t) => s + (t.pnl ?? 0), 0) / closedTrades.length
-    : 0
+  const filled = trades.filter(t => t.status === 'filled')
 
   return (
     <div className="space-y-3">
@@ -320,17 +325,9 @@ export default function AccountSummary({ trades, alpacaState }: { trades: Trade[
         <div className="sm:w-48 sm:flex-shrink-0">
           <PortfolioCard account={account} loading={loading} />
         </div>
-        <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="flex-1 grid grid-cols-2 gap-3">
           <HitRatioGauge trades={trades} />
           <DollarPnL trades={trades} />
-          <StatCard
-            label="Avg P&L"
-            value={closedTrades.length > 0 ? `${avgPnL >= 0 ? '+' : ''}${fmtUSD(avgPnL)}` : '—'}
-            sub={closedTrades.length > 0
-              ? `${closedTrades.length} closed trade${closedTrades.length !== 1 ? 's' : ''}`
-              : 'no closed trades'}
-            valueColor={closedTrades.length === 0 ? 'text-white' : avgPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}
-          />
         </div>
       </div>
 
