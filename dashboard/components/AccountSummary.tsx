@@ -327,7 +327,7 @@ export default function AccountSummary({ trades, alpacaState }: { trades: Trade[
           <div className="flex flex-col gap-3">
             <DollarPnL trades={trades} />
             <StatCard
-              label="Avg P&L / trade"
+              label="Avg P&L"
               value={closedTrades.length > 0 ? `${avgPnL >= 0 ? '+' : ''}${fmtUSD(avgPnL)}` : '—'}
               sub={closedTrades.length > 0 ? `${closedTrades.length} closed trade${closedTrades.length !== 1 ? 's' : ''}` : 'no closed trades'}
               valueColor={closedTrades.length === 0 ? 'text-white' : avgPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}

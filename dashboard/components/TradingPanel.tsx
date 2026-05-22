@@ -80,18 +80,33 @@ export default function TradingPanel({
   champion:        ChampionConfig | null
   alpacaState:     AlpacaState | null
 }) {
-  const [trades,      setTrades]      = useState<Trade[]>(initialTrades)
-  const [liveAgents,  setLiveAgents]  = useState<AgentStatus[]>(agents)
-  const [newTradeId,  setNewTradeId]  = useState<string | null>(null)
-  const [toast,       setToast]       = useState<Trade | null>(null)
-  const [isLive,      setIsLive]      = useState(false)
+  const [trades,        setTrades]        = useState<Trade[]>(initialTrades)
+  const [liveAgents,    setLiveAgents]    = useState<AgentStatus[]>(agents)
+  const [liveAnalysis,  setLiveAnalysis]  = useState<AnalysisEntry[]>(initialAnalysis)
+  const [newTradeId,    setNewTradeId]    = useState<string | null>(null)
+  const [toast,         setToast]         = useState<Trade | null>(null)
+  const [isLive,        setIsLive]        = useState(false)
 
-  // Token totals for today's session (from analysis_log.indicators.tokens_*)
-  const todayET = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
-  const todayAnalysis = initialAnalysis.filter(a => a.created_at.startsWith(todayET))
-  const tokensIn    = todayAnalysis.reduce((s, a) => s + (Number((a.indicators as Record<string, unknown> | null)?.tokens_in)  || 0), 0)
-  const tokensOut   = todayAnalysis.reduce((s, a) => s + (Number((a.indicators as Record<string, unknown> | null)?.tokens_out) || 0), 0)
-  const tokenCycles = todayAnalysis.filter(a => (a.indicators as Record<string, unknown> | null)?.tokens_in != null).length
+  // Token aggregation helpers
+  function getTokens(entries: AnalysisEntry[]) {
+    type Ind = Record<string, unknown> | null
+    return {
+      in:  entries.reduce((s, a) => s + (Number((a.indicators as Ind)?.tokens_in)  || 0), 0),
+      out: entries.reduce((s, a) => s + (Number((a.indicators as Ind)?.tokens_out) || 0), 0),
+    }
+  }
+
+  const nowET      = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }))
+  const todayStr   = nowET.toLocaleDateString('en-CA')
+  const monDay     = nowET.getDay() === 0 ? 6 : nowET.getDay() - 1
+  const monday     = new Date(nowET); monday.setDate(nowET.getDate() - monDay)
+  const mondayStr  = monday.toLocaleDateString('en-CA')
+
+  const todayEntries  = liveAnalysis.filter(a => a.created_at.startsWith(todayStr))
+  const weekEntries   = liveAnalysis.filter(a => a.created_at.slice(0, 10) >= mondayStr)
+  const tokDay        = getTokens(todayEntries)
+  const tokWeek       = getTokens(weekEntries)
+  const tokenCycles   = todayEntries.filter(a => (a.indicators as Record<string,unknown>|null)?.tokens_in != null).length
 
   // Auto-dismiss toast
   useEffect(() => {
@@ -159,6 +174,18 @@ export default function TradingPanel({
     return () => { sb.removeChannel(channel) }
   }, [])
 
+  // Realtime: analysis_log (token counter updates live)
+  useEffect(() => {
+    const sb = createSupabase()
+    const channel = sb
+      .channel('analysis-live')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'analysis_log' },
+        (payload) => setLiveAnalysis(prev => [payload.new as AnalysisEntry, ...prev])
+      )
+      .subscribe()
+    return () => { sb.removeChannel(channel) }
+  }, [])
+
   return (
     <>
       {toast && <TradeToast trade={toast} onClose={() => setToast(null)} />}
@@ -173,8 +200,10 @@ export default function TradingPanel({
         </h2>
         <AgentGrid
           agents={liveAgents}
-          tokensIn={tokensIn}
-          tokensOut={tokensOut}
+          tokensIn={tokDay.in}
+          tokensOut={tokDay.out}
+          tokensInWeek={tokWeek.in}
+          tokensOutWeek={tokWeek.out}
           cycles={tokenCycles}
         />
       </section>
