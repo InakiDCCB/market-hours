@@ -86,6 +86,13 @@ export default function TradingPanel({
   const [toast,       setToast]       = useState<Trade | null>(null)
   const [isLive,      setIsLive]      = useState(false)
 
+  // Token totals for today's session (from analysis_log.indicators.tokens_*)
+  const todayET = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+  const todayAnalysis = initialAnalysis.filter(a => a.created_at.startsWith(todayET))
+  const tokensIn    = todayAnalysis.reduce((s, a) => s + (Number((a.indicators as Record<string, unknown> | null)?.tokens_in)  || 0), 0)
+  const tokensOut   = todayAnalysis.reduce((s, a) => s + (Number((a.indicators as Record<string, unknown> | null)?.tokens_out) || 0), 0)
+  const tokenCycles = todayAnalysis.filter(a => (a.indicators as Record<string, unknown> | null)?.tokens_in != null).length
+
   // Auto-dismiss toast
   useEffect(() => {
     if (!toast) return
@@ -164,7 +171,12 @@ export default function TradingPanel({
         <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">
           Agent
         </h2>
-        <AgentGrid agents={liveAgents} />
+        <AgentGrid
+          agents={liveAgents}
+          tokensIn={tokensIn}
+          tokensOut={tokensOut}
+          cycles={tokenCycles}
+        />
       </section>
 
       {/* Nivel 5: Estrategia activa */}

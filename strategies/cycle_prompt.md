@@ -121,6 +121,10 @@ Post-stop-hunt re-entry (P6):
   4. BASE/trade?asset=X&side=buy&qty=N&price=FILL&order_id=ID&notes=SL%3DX.XX+TP1%3DY.YY+TP2%3DZ.ZZ+ATR%3DA.AA
 
 ## STEP 9 — LOG CYCLE
+Build indicators JSON including token estimates for this cycle:
+  tokens_in  ≈ (total characters of all tool inputs + prompt context this cycle) / 4
+  tokens_out ≈ (total characters of your output text this cycle) / 4
+  Merge with market indicators: {QQQ:{...},TSLA:{...},RIVN:{...},tokens_in:N,tokens_out:N}
 BASE/log?asset=QQQ&timeframe=5m&signal=SIGNAL&confidence=N&indicators=ENC_JSON&thesis=ENC_TEXT
 BASE/heartbeat?name=pulse-v2&status=running&description=Active+HH%3AMM+ET&metadata=ENC_JSON
 
