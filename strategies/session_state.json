@@ -1,47 +1,36 @@
 {
-  "_doc": "Estado incremental Pulse v2.4. Actualizar tras cada ciclo — solo fetchar 3-5 barras nuevas.",
-  "_update_formulas": {
-    "vwap": "vwap_num += TP*V; vwap_den += V; vwap = vwap_num/vwap_den  (TP=(H+L+C)/3)",
-    "ema21": "ema = ema_prev*0.90909 + close*0.09091",
-    "ema9":  "ema = ema_prev*0.80000 + close*0.20000",
-    "rsi_wilder": "avg_gain = avg_gain*13/14 + gain/14;  avg_loss = avg_loss*13/14 + loss/14;  RSI=100-100/(1+avg_gain/avg_loss)"
-  },
-  "date": "2026-05-21",
-  "last_bar_ET": "14:35",
-  "last_bar_UTC": "2026-05-21T18:35:00Z",
+  "_doc": "Estado incremental Pulse v2.4.",
+  "date": "2026-05-22",
+  "last_bar_ET": "11:13",
+  "last_bar_UTC": "2026-05-22T15:13:00Z",
   "regime": "RANGE",
-  "session_low": { "QQQ": 706.77, "TSLA": 412.90, "RIVN": 13.56 },
+  "bars_1min_processed": 91,
+  "session_low": { "QQQ": 715.96, "TSLA": 420.51, "RIVN": 14.075 },
+  "equity": 100232.26,
+  "position": null,
+  "session_pnl": {
+    "trade1_qqq": {
+      "entry": 719.47,
+      "tp1_exit": 720.23,
+      "tp1_qty": 6,
+      "tp1_pnl": 4.56,
+      "tp2_exit": 720.5629,
+      "tp2_qty": 7,
+      "tp2_pnl": 7.65,
+      "total_pnl": 12.21
+    }
+  },
   "QQQ": {
-    "vwap_num": 17645000000,
-    "vwap_den": 24810000,
-    "vwap": 711.26,
-    "ema21": 713.98,
-    "ema9":  714.90,
-    "rsi_avg_gain": 0.2489,
-    "rsi_avg_loss": 0.2368,
-    "last_close": 714.45,
-    "atr14_1min_est": 0.60
+    "vwap": 719.00,
+    "ema9": 720.02,
+    "ema9_valid": true,
+    "rsi14_1min": 63.0,
+    "session_low": 715.96,
+    "session_high": 720.94,
+    "last_close": 720.70,
+    "session_open": 718.08,
+    "atr14_1min_est": 0.40
   },
-  "TSLA": {
-    "vwap_num": 12495000000,
-    "vwap_den": 29820000,
-    "vwap": 419.00,
-    "ema21": 420.61,
-    "ema9":  420.50,
-    "rsi_avg_gain": 0.1790,
-    "rsi_avg_loss": 0.2150,
-    "last_close": 420.60,
-    "atr14_1min_est": 0.58
-  },
-  "RIVN": {
-    "vwap_num": 211200000,
-    "vwap_den": 15260000,
-    "vwap": 13.84,
-    "ema21": 14.082,
-    "ema9":  14.11,
-    "rsi_avg_gain": 0.01336,
-    "rsi_avg_loss": 0.01014,
-    "last_close": 14.155,
-    "atr14_1min_est": 0.040
-  }
+  "TSLA": { "vwap": 423.55, "ema9": 423.89, "last_close": 424.63 },
+  "RIVN": { "vwap": 14.232, "ema9": 14.224, "last_close": 14.19 }
 }

@@ -43,6 +43,8 @@ Passive observation cycle (15:30–16:00): steps 1–2 only; no new entries; for
 
 Loop starts **manually at 10:00 ET** from a local interactive session (direct `mcp__alpaca__*` tool calls are blocked in cloud/remote environments; Alpaca data is available in Vercel via the `alpaca_state` sync table).
 
+**Running the loop:** invoke `start_agent.ps1` from a local PowerShell session at 10:00 ET. It reads `strategies/cycle_prompt.md`, substitutes `{{AGENT_SECRET}}`, and calls `claude --print --dangerously-skip-permissions` every 5 min (300s); logs to `logs/agent_YYYYMMDD.log`. `strategies/cycle_prompt.md` is the source of truth for step-by-step cycle behavior.
+
 ## Dashboard (`dashboard/`)
 
 Next.js 14 app deployed to Vercel. Server components fetch all data from Supabase in parallel and pass it to client components as props.
@@ -82,7 +84,7 @@ cd dashboard && npx tsc --noEmit # type-check without building
 | `DataTabs.tsx` | Tabbed interface for trades & analysis; line charts (Recharts); CSV export |
 | `MarketStatus.tsx` | ET clock + market open/closed indicator; pings `/api/ping` every 30s for latency |
 | `ChampionCard.tsx` | Displays active strategy config from `champion_strategy` table; also exports `IncomingSlot` |
-| `AgentGrid.tsx` | Lists agents from `agent_status`; calls `toggleAgentStatus()` server action |
+| `AgentGrid.tsx` | Lists agents from `agent_status`; calls `toggleAgentStatus()` server action; renders `TokenUsageCard` with draining quota bars and reset countdowns |
 
 **Env vars required:**
 
@@ -94,6 +96,7 @@ cd dashboard && npx tsc --noEmit # type-check without building
 | `ALPACA_SECRET_KEY` | `lib/alpaca-sync.ts` (Alpaca account/positions sync) |
 | `AGENT_SECRET` | All `/api/db/*` routes (agent authentication) |
 | `CRON_SECRET` | `/api/cron/sync` route (Vercel cron authentication) |
+| `SUPABASE_SERVICE_ROLE_KEY` | `createSupabaseAdmin()` in all `/api/db/*` write routes |
 
 ## Alpaca MCP
 
@@ -125,10 +128,11 @@ Full table reference:
 |---|---|---|
 | `trades` | Paper trade ledger | `exit_type` ∈ {TP, SL, TIME, MANUAL}; `total_value` is a generated column |
 | `market_snapshots` | OHLCV captures | `timeframe` ∈ {1m, 5m, 1h, 1d} |
-| `analysis_log` | Signals + indicator readings | `indicators` is JSONB; `signal` ∈ {bullish, bearish, neutral, watching} |
+| `analysis_log` | Signals + indicator readings | `indicators` is JSONB (includes `tokens_in`/`tokens_out` per cycle); `signal` ∈ {bullish, bearish, neutral, watching} |
 | `agent_status` | Agent heartbeats | `status` ∈ {running, idle, error}; `metadata` is JSONB |
 | `champion_strategy` | Active strategy config | Single row keyed `"current"`; full config stored as JSONB in `config` column |
 | `alpaca_state` | Live Alpaca account snapshot | Single row keyed `"live"`; synced by `/api/db/sync-alpaca` and Vercel cron |
+| `session_memory` | Post-close analysis storage | Session learnings written after each trading day |
 
 TypeScript types for all tables live in `lib/supabase.ts` (`Trade`, `AnalysisEntry`, `MarketSnapshot`, `AgentStatus`, `ChampionConfig`, `AlpacaState`, `AlpacaPosition`).
 
