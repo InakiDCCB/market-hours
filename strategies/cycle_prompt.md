@@ -15,6 +15,13 @@ Always include QQQ, TSLA, RIVN. Use "x" for checkmarks, "-" for no position.
 After the table, add 1-3 lines of comments (regime, rejected setups, position updates, etc.).
 Then proceed silently with all steps below.
 
+## STEP 0 — SESSION STATE
+Read file: strategies/session_state.json
+If file exists AND state.date == today's ET date:
+  has_state = true. Available per symbol: vwap_num, vwap_den, ema9, ema21, last_close, atr14_1min_est, bars_count, last_bar_UTC.
+Else:
+  has_state = false.
+
 ## TOOLS
 Alpaca (MCP):
 - `mcp__alpaca__get_clock` — market clock {is_open, timestamp}
@@ -55,14 +62,27 @@ If daily P&L ≤ -500 → heartbeat(idle, "Daily loss limit $500 reached") → D
 
 ## STEP 3 — MARKET DATA
 For QQQ, TSLA, RIVN:
-  get_stock_bars(symbol, "5Min", 100, "sip") — for VWAP, EMA, RSI, regime
-  get_stock_bars(symbol, "1Min", 30, "iex") — for ATR14 and 1-min confirmation
+  If has_state AND state[symbol].bars_count > 0:
+    get_stock_bars(symbol, "5Min", 20, "sip") — incremental update
+    get_stock_bars(symbol, "1Min", 20, "iex") — ATR14 refresh
+  Else (first cycle or new day):
+    get_stock_bars(symbol, "5Min", 100, "sip") — full history for VWAP seed
+    get_stock_bars(symbol, "1Min", 30, "iex") — ATR14 and 1-min confirmation
 
 ## STEP 4 — COMPUTE INDICATORS
 From 5-min bars:
-  VWAP = Σ((H+L+C)/3 × vol) / Σvol — cumulative from 9:30 ET bars only
-  EMA9, EMA21 = n-period EMA on close
-  RSI14 = standard RSI on close
+  If has_state AND state[symbol] exists:
+    new_bars = bars with timestamp > state[symbol].last_bar_UTC
+    vwap_num = state[symbol].vwap_num + Σ((H+L+C)/3 × vol) for new_bars
+    vwap_den = state[symbol].vwap_den + Σvol for new_bars
+    EMA9  = seed from state[symbol].ema9,  apply k=2/10 for each new bar close
+    EMA21 = seed from state[symbol].ema21, apply k=2/22 for each new bar close (null if <21 total bars)
+  Else:
+    vwap_num = Σ((H+L+C)/3 × vol) for all bars since 9:30 ET
+    vwap_den = Σvol for all bars since 9:30 ET
+    EMA9, EMA21 = cold start from all available closes
+  VWAP = vwap_num / vwap_den
+  RSI14 = standard RSI on last 14 closes
 From 1-min bars:
   ATR14 = mean of last 14 true ranges: max(H−L, |H−prevC|, |L−prevC|)
 
@@ -127,6 +147,24 @@ Build indicators JSON including token estimates for this cycle:
   Merge with market indicators: {QQQ:{...},TSLA:{...},RIVN:{...},tokens_in:N,tokens_out:N}
 BASE/log?asset=QQQ&timeframe=5m&signal=SIGNAL&confidence=N&indicators=ENC_JSON&thesis=ENC_TEXT
 BASE/heartbeat?name=pulse-v2&status=running&description=Active+HH%3AMM+ET&metadata=ENC_JSON
+
+## STEP 9b — SAVE SESSION STATE
+Write strategies/session_state.json with the following structure (merge with existing, do not drop fields):
+{
+  "date": "YYYY-MM-DD",
+  "last_bar_ET": "HH:MM",
+  "last_bar_UTC": "<ISO timestamp of last 5-min bar processed>",
+  "regime": "<RANGE|TREND|TREND_DOWN>",
+  "bars_1min_processed": <total 1-min bars seen today>,
+  "session_low":  { "QQQ": X, "TSLA": X, "RIVN": X },
+  "session_high": { "QQQ": X, "TSLA": X, "RIVN": X },
+  "equity": X,
+  "position": { "symbol": X, "qty": N, "entry": X, "unrealized_pl": X } or null,
+  "open_orders": [...],
+  "QQQ":  { "vwap_num": X, "vwap_den": X, "vwap": X, "ema9": X, "ema21": X, "last_close": X, "atr14_1min_est": X, "bars_count": N },
+  "TSLA": { "vwap_num": X, "vwap_den": X, "vwap": X, "ema9": X, "ema21": X, "last_close": X, "atr14_1min_est": X, "bars_count": N },
+  "RIVN": { "vwap_num": X, "vwap_den": X, "vwap": X, "ema9": X, "ema21": X, "last_close": X, "atr14_1min_est": X, "bars_count": N }
+}
 
 ## STEP 10 — END-OF-SESSION MEMORY (only when ET ≥ 15:55)
 Compute final stats from trades-today. Write:

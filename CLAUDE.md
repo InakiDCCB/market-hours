@@ -41,9 +41,7 @@ Each ~5-min cycle during active trading:
 
 Passive observation cycle (15:30–16:00): steps 1–2 only; no new entries; forced close of any open position at 15:55 ET (`exit_type='TIME'`).
 
-Loop starts **manually at 10:00 ET** from a local interactive session (direct `mcp__alpaca__*` tool calls are blocked in cloud/remote environments; Alpaca data is available in Vercel via the `alpaca_state` sync table).
-
-**Running the loop:** invoke `start_agent.ps1` from a local PowerShell session at 10:00 ET. It reads `strategies/cycle_prompt.md`, substitutes `{{AGENT_SECRET}}`, and calls `claude --print --dangerously-skip-permissions` every 5 min (300s); logs to `logs/agent_YYYYMMDD.log`. `strategies/cycle_prompt.md` is the source of truth for step-by-step cycle behavior.
+Loop starts **manually at 10:00 ET** from a local interactive Claude Code session. Direct `mcp__alpaca__*` tool calls are blocked in cloud/remote environments; Alpaca data is available in Vercel via the `alpaca_state` sync table. `strategies/cycle_prompt.md` is the source of truth for step-by-step cycle behavior. To reduce token consumption, start the session with `/model haiku`.
 
 ## Dashboard (`dashboard/`)
 
