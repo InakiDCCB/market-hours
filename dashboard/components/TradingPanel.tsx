@@ -7,6 +7,7 @@ import AccountSummary from './AccountSummary'
 import AgentGrid from './AgentGrid'
 import ChampionCard from './ChampionCard'
 import DataTabs from './DataTabs'
+import MarketCalendarCard from './MarketCalendarCard'
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
@@ -159,12 +160,17 @@ export default function TradingPanel({
       {/* Niveles 1–3: Portfolio · Métricas · Top Performers */}
       <AccountSummary trades={trades} alpacaState={alpacaState} />
 
-      {/* Nivel 4: Agente */}
-      <section>
-        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">
-          Agent
-        </h2>
-        <AgentGrid agents={liveAgents} />
+      {/* Nivel 4: Agente + Market Calendar */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">
+            Agent
+          </h2>
+          <AgentGrid agents={liveAgents} />
+        </div>
+        <div>
+          <MarketCalendarCard />
+        </div>
       </section>
 
       {/* Nivel 5: Estrategia activa */}
