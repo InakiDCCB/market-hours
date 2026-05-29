@@ -10,6 +10,7 @@
 ## Referencias externas
 - [Supabase](ref_supabase.md) — project_id y tablas clave del sistema
 - [Repo de skills locales](ref_skills_repo.md) — pre-market / post-close en `.claude/commands/` con git local
+- [Vault de Obsidian](ref_obsidian_vault.md) — el directorio Trading es también el vault del usuario; memoria se lee en Obsidian
 
 ## Preferencias del usuario
 - [Estilo de decisión](feedback_decision_style.md) — propuestas opinionadas con tradeoffs explícitos
